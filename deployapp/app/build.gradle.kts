@@ -27,14 +27,20 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         viewBinding = true
+    }
+    packaging {
+        // this is for error
+        // A failure occurred while executing com.android.build.gradle.internal.tasks.MergeJavaResWorkAction
+        //   > 3 files found with path 'META-INF/versions/9/OSGI-INF/MANIFEST.MF' from inputs:
+        resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
 }
 
@@ -48,6 +54,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.bcprov.jdk18on)
+    implementation(libs.bcutil.jdk18on)
+    implementation(libs.bcpkix.jdk18on)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
