@@ -17,6 +17,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.pvarki.deployapp.databinding.ActivityMainBinding
+import com.pvarki.deployapp.ui.LoginActivity
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -111,6 +112,15 @@ class MainActivity : AppCompatActivity() {
 
         // Add BouncyCastle provider
         Security.addProvider(BouncyCastleProvider())
+
+
+
+        val buttonLoginTest = findViewById<Button>(R.id.buttonLoginTest)
+        buttonLoginTest.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+
+        }
+
 
     }
 
