@@ -1,15 +1,16 @@
 package com.pvarki.deployapp.data.api
 
+import com.pvarki.deployapp.App
+import com.pvarki.deployapp.utils.PreferenceHelper.restApiBaseUrl
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object ApiClient {
-    //private const val BASE_URL = "https://reqres.in/api/"
-   private const val BASE_URL = "https://localmaeher.dev.pvarki.fi:4439"
+   private const val BASE_URL = "https://casual-halibut.solution.dev.pvarki.fi"
+   //private const val BASE_URL = "https://localmaeher.dev.pvarki.fi:4439"
 
-   // https://localmaeher.dev.pvarki.fi:4439/api/v1/healthcheck
 
     // Fake token provider for demo purposes
     private fun getToken(): String? = null
@@ -25,7 +26,7 @@ object ApiClient {
         .build()
 
     val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(App.AppPrefs.restApiBaseUrl) // get url from preferences
         .addConverterFactory(GsonConverterFactory.create())
         .client(httpClient)
 

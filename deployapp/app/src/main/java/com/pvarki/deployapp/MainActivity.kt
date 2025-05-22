@@ -18,6 +18,7 @@ import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.pvarki.deployapp.databinding.ActivityMainBinding
 import com.pvarki.deployapp.ui.LoginActivity
+import com.pvarki.deployapp.utils.Utils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.io.FileOutputStream
@@ -73,32 +74,25 @@ class MainActivity : AppCompatActivity() {
         buttonCreateCertificate.setOnClickListener {
             try {
                 // Step 1: Generate KeyPair
-                val keyPair = generateKeyPair()
+                val utils = Utils()
+                val keyPair = utils.generateKeyPair()
 
                 // Step 2: Generate Self-Signed Certificate
-                val certificate = generateSelfSignedCertificate(keyPair)
+                val certificate = utils.generateSelfSignedCertificate(keyPair, "TODO CN")
                 val newGuid = UUID.randomUUID()
                 // Step 3: Save PFX file with password
                 val fileName = "cert_$newGuid.pfx"
-                val pfxFilePath = getCertDirectory() + "/" + fileName // Path to save the PFX
+                val pfxFilePath = utils.getCertDirectory(this) + "/" + fileName // Path to save the PFX
                 val pfxPassword = "mySecurePassword" // Password for the PFX file
 
-                createPfxWithPassword(pfxFilePath, pfxPassword, certificate, keyPair.private)
+                utils.createPfxWithPassword(pfxFilePath, pfxPassword, certificate, keyPair.private)
 
                 //    Log.d(
                 //        MainActivity.TAG,
                 //        "PFX file created successfully at: $pfxFilePath"
                 //    )
-                val file = File(getCertDirectory(), fileName)
+                val file = File(utils.getCertDirectory(this), fileName)
                 println("2. File absolute path: " + file.absolutePath)
-
-                val certFile = File(getCertDirectory(), fileName)
-                if (certFile.exists()) {
-                    println("File fileName exists at: " + certFile.absolutePath)
-                } else {
-                    println("File fileName not found!")
-                }
-
 
                 shareFile(
                     this@MainActivity,
@@ -114,11 +108,9 @@ class MainActivity : AppCompatActivity() {
         Security.addProvider(BouncyCastleProvider())
 
 
-
         val buttonLoginTest = findViewById<Button>(R.id.buttonLoginTest)
         buttonLoginTest.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
-
         }
 
 
@@ -136,30 +128,9 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun getCertDirectory(): String {
-        val dir = ("$filesDir/certfiles").toString()
-        // Create a subdirectory under the files directory
-        val targetDir = File(dir)
-        if (!targetDir.exists()) {
-            val wasCreated =
-                targetDir.mkdirs() // Creates the directory and any missing parent directories
-            if (wasCreated) {
-                println("Directory created at: " + targetDir.absolutePath)
-            } else {
-                println("Failed to create directory at: " + targetDir.absolutePath)
-            }
-        } else {
-            println("Directory already exists at: " + targetDir.absolutePath)
-        }
-        return dir
-    }
-
-    fun shareFile(context: Context, file: File, authority: String?) {
+    fun shareFile(context: Context, file: File, authority: String) {
         println("3. File absolute path: " + file.absolutePath)
-        val u = FileProvider.getUriForFile(
-            context,
-            authority!!, file
-        )
+
         // Create a Uri for the file using FileProvider
         val fileUri = FileProvider.getUriForFile(
             context,
@@ -180,59 +151,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    @Throws(java.lang.Exception::class)
-    private fun generateKeyPair(): KeyPair {
-        // Generate RSA KeyPair
-        val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-        keyPairGenerator.initialize(2048)
-        return keyPairGenerator.generateKeyPair()
-    }
 
-    @Throws(java.lang.Exception::class)
-    private fun generateSelfSignedCertificate(keyPair: KeyPair): X509Certificate {
-        // Set up the certificate's issuer and subject (both are the same for self-signed certificates)
-        val issuer: org.bouncycastle.asn1.x500.X500Name =
-            org.bouncycastle.asn1.x500.X500Name("CN=Self Signed")
-        val subject: org.bouncycastle.asn1.x500.X500Name = issuer
 
-        // Generate serial number and set validity dates
-        val serial = BigInteger(128, SecureRandom())
-
-        // Use DERUTCTime (or ASN1GeneralizedTime) for Date conversion
-        val notBeforeDate = Date(System.currentTimeMillis())
-        val notAfterDate =
-            Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000) // 1 year validity
-
-        val notBefore: org.bouncycastle.asn1.x509.Time =
-            org.bouncycastle.asn1.x509.Time(notBeforeDate)
-        val notAfter: org.bouncycastle.asn1.x509.Time =
-            org.bouncycastle.asn1.x509.Time(notAfterDate)
-
-        val publicKey = keyPair.public
-        val privateKey = keyPair.private
-
-        // Convert PublicKey to SubjectPublicKeyInfo
-        val publicKeyInfo: org.bouncycastle.asn1.x509.SubjectPublicKeyInfo =
-            org.bouncycastle.asn1.x509.SubjectPublicKeyInfo.getInstance(publicKey.encoded)
-
-        // Build the certificate
-        val certificateBuilder: org.bouncycastle.cert.X509v3CertificateBuilder =
-            org.bouncycastle.cert.X509v3CertificateBuilder(
-                issuer, serial, notBefore, notAfter, subject, publicKeyInfo
-            )
-
-        // Sign the certificate with the private key
-        val contentSigner: org.bouncycastle.operator.ContentSigner =
-            org.bouncycastle.operator.jcajce.JcaContentSignerBuilder("SHA256withRSA")
-                .build(privateKey)
-
-        // Convert the certificate to X509Certificate
-        val certificate: X509Certificate =
-            org.bouncycastle.cert.jcajce.JcaX509CertificateConverter()
-                .getCertificate(certificateBuilder.build(contentSigner))
-
-        return certificate
-    }
 
     @Throws(Exception::class)
     private fun createPfxWithPassword(

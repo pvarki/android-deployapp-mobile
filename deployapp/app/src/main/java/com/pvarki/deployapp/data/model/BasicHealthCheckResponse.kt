@@ -1,6 +1,6 @@
 package com.pvarki.deployapp.data.model
 
-data class HealthCheck(
+data class BasicHealthCheckResponse(
     val deployment: String,
     val dns: String,
     val healthcheck: String,

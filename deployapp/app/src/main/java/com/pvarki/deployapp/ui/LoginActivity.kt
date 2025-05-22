@@ -45,13 +45,13 @@ class LoginActivity : AppCompatActivity() {
 
     private fun performLogin(username: String, password: String) {
         lifecycleScope.launch {
-            val result = authRepository.login(username, password)
+          /*  val result = authRepository.login(username, password)
             result.onSuccess {
                 Toast.makeText(this@LoginActivity, "Login successful", Toast.LENGTH_SHORT).show()
                 // Navigate to the next screen or perform other actions
             }.onFailure { error ->
                 Toast.makeText(this@LoginActivity, "Login failed: ${error.message}", Toast.LENGTH_SHORT).show()
-            }
+            }*/
         }
     }
 }
