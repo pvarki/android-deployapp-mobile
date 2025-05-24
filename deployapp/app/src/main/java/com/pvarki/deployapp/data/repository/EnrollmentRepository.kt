@@ -7,7 +7,7 @@ import com.pvarki.deployapp.data.model.EnrollResponse
 
 class EnrollmentRepository {
 
-    private val api: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val api: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
 
     suspend fun postEnEnrollResponse(er: EnrollRequest): EnrollResponse {
         val response = api.enrollWithCsr(er)

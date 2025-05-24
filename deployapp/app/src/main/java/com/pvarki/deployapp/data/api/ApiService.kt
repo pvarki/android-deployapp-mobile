@@ -17,16 +17,12 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-
-
-
     @GET("/api/v1/token/jwt/refresh")
     suspend fun refreshToken(): Response<ResponseBody>
 
     @POST("/api/v1/token/jwt/exchange")
     suspend fun exchangeToken(): Response<ResponseBody>
 
-//  {"invite_code": inv_code, "callsign": callsign, "csr": csrpem}
     @POST("/api/v1/enrollment/invitecode/enroll")
     suspend fun enrollWithCsr(@Body enrollment: EnrollRequest): EnrollResponse
 
@@ -45,13 +41,5 @@ interface ApiService {
     @GET("users")
     suspend fun getUsers(): Response<List<User>>
 
-    @GET("users/{id}")
-    suspend fun getUserById(@Path("id") userId: Int): Response<User>
-
-    @POST("users")
-    suspend fun createUser(@Body user: User): Response<User>
-
-    @POST("login")
-    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
 }

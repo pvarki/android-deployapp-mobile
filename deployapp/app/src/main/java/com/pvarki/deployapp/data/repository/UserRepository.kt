@@ -9,7 +9,7 @@ import retrofit2.HttpException
 
 class UserRepository {
 
-    private val api: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val api: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
     suspend fun getAllUsers(): Result<List<User>> {
         return try {
             val response = api.getUsers()

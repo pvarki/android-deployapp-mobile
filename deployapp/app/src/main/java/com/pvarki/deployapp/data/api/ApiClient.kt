@@ -8,15 +8,31 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
 object ApiClient {
-   private const val BASE_URL = "https://casual-halibut.solution.dev.pvarki.fi"
-   //private const val BASE_URL = "https://localmaeher.dev.pvarki.fi:4439"
 
 
-    // Fake token provider for demo purposes
+    @Volatile
+    private var retrofitInstance: Retrofit? = null
+
     private fun getToken(): String? = null
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
+    }
+
+
+    fun getRetrofit(): Retrofit {
+        if (retrofitInstance == null || App.AppPrefs.restApiBaseUrl != retrofitInstance?.baseUrl().toString()) {
+            retrofitInstance = Retrofit.Builder()
+                .baseUrl(App.AppPrefs.restApiBaseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient)
+                .build()
+        }
+        return retrofitInstance!!
+    }
+
+    fun reset() {
+        retrofitInstance = null
     }
 
     private val httpClient = OkHttpClient.Builder()
@@ -25,10 +41,10 @@ object ApiClient {
         .addInterceptor(loggingInterceptor)
         .build()
 
-    val retrofit: Retrofit = Retrofit.Builder()
+  /*  val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(App.AppPrefs.restApiBaseUrl) // get url from preferences
         .addConverterFactory(GsonConverterFactory.create())
         .client(httpClient)
 
-        .build()
+        .build()*/
 }

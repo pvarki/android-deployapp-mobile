@@ -7,12 +7,11 @@ import com.pvarki.deployapp.data.model.BasicHealthCheckResponse
 import retrofit2.HttpException
 
 class HealthcheckRepository {
-    private val api: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val api: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
 
     suspend fun requestHealthCheck(): BasicHealthCheckResponse {
         return api.healthcheck()
     }
-
 
     suspend fun requestHealthCheckServices(): AllProductsHealthCheckResponse? {
         val response = api.healthcheckServices()

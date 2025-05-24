@@ -18,21 +18,22 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.DeployApp.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
-            android:name=".ui.LoginActivity"
+            android:name=".ui.CreateCSRActivity"
             android:exported="true"
-            android:label="Login"
-            android:theme="@style/Theme.DeployApp.NoActionBar">
-        </activity>
+            android:label="Deploy App" />
+
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="true"
+            android:label="Settings" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -5,7 +5,7 @@ import com.pvarki.deployapp.data.api.ApiService
 import retrofit2.HttpException
 
 class TokenRepository {
-    private val api: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val api: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
 
     suspend fun refreshToken(): String {
         val response = api.refreshToken()

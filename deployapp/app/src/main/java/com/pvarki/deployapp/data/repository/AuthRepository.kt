@@ -10,7 +10,7 @@ import retrofit2.HttpException
 import java.io.IOException
 
 class AuthRepository(context: Context) {
-    private val apiService: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val apiService: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 

@@ -1,6 +1,9 @@
 package com.pvarki.deployapp.utils
 
+import android.app.AlertDialog
 import android.content.Context
+import android.view.LayoutInflater
+import com.pvarki.deployapp.R
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
@@ -24,7 +27,19 @@ import javax.security.auth.x500.X500Principal
 
 class Utils {
 
-    fun generateCSR(privateKey: PrivateKey, publicKey: PublicKey,  subject: X500Principal): String {
+
+    fun showProgressDialog(context: Context): AlertDialog {
+        val builder = AlertDialog.Builder(context)
+        val view = LayoutInflater.from(context).inflate(R.layout.dialog_progress, null)
+        builder.setView(view)
+        builder.setCancelable(false) // Optional: make it not cancelable
+        val dialog = builder.create()
+        dialog.show()
+        return dialog
+    }
+
+
+    fun generateCSR(privateKey: PrivateKey, publicKey: PublicKey, subject: X500Principal): String {
         val signer = JcaContentSignerBuilder("SHA256withRSA").build(privateKey)
         val csrBuilder = JcaPKCS10CertificationRequestBuilder(subject, publicKey)
         val csr = csrBuilder.build(signer)
@@ -38,7 +53,7 @@ class Utils {
     }
 
 
-    fun getPublicKeyFromPfx(pfxPath: String, password: String): PublicKey  {
+    fun getPublicKeyFromPfx(pfxPath: String, password: String): PublicKey {
         try {
             // Add Bouncy Castle provider if not already added
             if (Security.getProvider("BC") == null) {
@@ -81,7 +96,7 @@ class Utils {
         pfxPassword: String,
         certificate: X509Certificate,
         privateKey: PrivateKey
-    ): String {
+    ) {
         // Create an empty KeyStore of type PKCS12 (PFX)
         val keyStore = KeyStore.getInstance("PKCS12")
         keyStore.load(null, null) // Initialize the keystore
@@ -100,8 +115,6 @@ class Utils {
             keyStore.store(fos, pfxPassword.toCharArray()) // Store the keystore with password
         }
         println("1. fFile absolute path pfxFilePath: $pfxFilePath")
-
-        return "content"
     }
 
 
@@ -125,7 +138,7 @@ class Utils {
     }
 
     @Throws(java.lang.Exception::class)
-    fun generateSelfSignedCertificate(keyPair: KeyPair, cn:String): X509Certificate {
+    fun generateSelfSignedCertificate(keyPair: KeyPair, cn: String): X509Certificate {
         // Set up the certificate's issuer and subject (both are the same for self-signed certificates)
         val issuer: org.bouncycastle.asn1.x500.X500Name =
             org.bouncycastle.asn1.x500.X500Name("CN=$cn")

@@ -57,9 +57,8 @@ class BackEndTest {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
         val repository = EnrollmentRepository()
-        val inviteCode = "2J9H7ON7"
-        val callSign = "EIOOTOTTA"
-
+        val inviteCode = "VPOSOQ9J"
+        val callSign = "EIOOTOTTA2"
 
         // Step 1: Generate KeyPair
         val utils = Utils()
@@ -68,8 +67,9 @@ class BackEndTest {
         // Step 2: Generate Self-Signed Certificate
         val certificate = utils.generateSelfSignedCertificate(keyPair, callSign)
         val newGuid = UUID.randomUUID()
+
         // Step 3: Save PFX file with password
-        val fileName = "cert_$newGuid.pfx"
+        val fileName = "cert_$callSign.pfx"
         val pfxFilePath =
             utils.getCertDirectory(appContext) + "/" + fileName // Path to save the PFX
         val pfxPassword = callSign // Password for the PFX file

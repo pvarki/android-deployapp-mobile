@@ -18,8 +18,8 @@ import javax.security.auth.x500.X500Principal
 @RunWith(AndroidJUnit4::class)
 class CertificateTest {
 
-    lateinit var appContext: Context
-    val callSign="TestCallSign"
+    private lateinit var appContext: Context
+    private val callSign="TestCallSign"
 
     @Before
     fun init() {
@@ -36,7 +36,7 @@ class CertificateTest {
 
         // Step 2: Generate Self-Signed Certificate
         val certificate = utils.generateSelfSignedCertificate(keyPair, callSign)
-        val newGuid = UUID.randomUUID()
+
         // Step 3: Save PFX file with password
         val fileName = "$callSign.pfx"
         val pfxFilePath = utils.getCertDirectory(appContext) + "/" + fileName // Path to save the PFX
@@ -44,22 +44,17 @@ class CertificateTest {
 
         utils.createPfxWithPassword(pfxFilePath, pfxPassword, certificate, keyPair.private)
 
-        //    Log.d(
-        //        MainActivity.TAG,
-        //        "PFX file created successfully at: $pfxFilePath"
-        //    )
         val file = File(utils.getCertDirectory(appContext), fileName)
         Assert.assertNotNull(file)
-
 
         val (privateKey, cert) = utils.loadKeyFromPfx(pfxFilePath, pfxPassword)
 
         val publicKey = utils.getPublicKeyFromPfx(pfxFilePath, pfxPassword)
 
-        val subject = X500Principal("CN=$callSign, O=MyOrg, C=FI")
+        val subject = X500Principal("CN=$callSign")
         val csrPem =  utils.generateCSR(privateKey, publicKey, subject)
         Assert.assertNotNull(csrPem)
-
+        Assert.assertTrue(csrPem.isNotEmpty())
 
     }
 }

@@ -6,7 +6,7 @@ import com.pvarki.deployapp.data.model.EnrollRequest
 import retrofit2.HttpException
 
 class UtilsRepository {
-    private val api: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val api: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
 
     suspend fun getJwtPubkey(): String {
         val response = api.getJwtPubkey()

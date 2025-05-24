@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
 class UserViewModel : ViewModel() {
-    private val apiService: ApiService = ApiClient.retrofit.create(ApiService::class.java)
+    private val apiService: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
 
     private val _users = MutableStateFlow<Result<List<User>>>(Result.success(emptyList()))
     val users: StateFlow<Result<List<User>>> = _users

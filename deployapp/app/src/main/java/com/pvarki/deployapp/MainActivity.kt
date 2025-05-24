@@ -17,21 +17,17 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.pvarki.deployapp.databinding.ActivityMainBinding
-import com.pvarki.deployapp.ui.LoginActivity
+import com.pvarki.deployapp.ui.CreateCSRActivity
+import com.pvarki.deployapp.ui.SettingsActivity
 import com.pvarki.deployapp.utils.Utils
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
 import java.io.FileOutputStream
-import java.math.BigInteger
-import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
-import java.security.SecureRandom
 import java.security.Security
 import java.security.cert.Certificate
 import java.security.cert.X509Certificate
-import java.util.Date
 import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
@@ -65,8 +61,6 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-
-
 
 
         textViewInfo = findViewById(R.id.textViewInfo)
@@ -107,13 +101,14 @@ class MainActivity : AppCompatActivity() {
         // Add BouncyCastle provider
         Security.addProvider(BouncyCastleProvider())
 
-
         val buttonLoginTest = findViewById<Button>(R.id.buttonLoginTest)
         buttonLoginTest.setOnClickListener {
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, CreateCSRActivity::class.java))
         }
+    }
 
-
+    fun onSettingsMenuClick(item: android.view.MenuItem) {
+        startActivity(Intent(this, SettingsActivity::class.java))
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
