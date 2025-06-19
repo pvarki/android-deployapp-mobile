@@ -35,6 +35,11 @@
             android:exported="true"
             android:label="Settings" />
 
+        <activity
+            android:name=".ui.tests.UiTestsActivity"
+            android:exported="true"
+            android:label="UI Tests (manual)" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.pvarki.deployapp.fileprovider"

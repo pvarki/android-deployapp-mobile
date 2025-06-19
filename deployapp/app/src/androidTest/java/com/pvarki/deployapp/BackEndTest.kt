@@ -20,6 +20,10 @@ import javax.security.auth.x500.X500Principal
 
 @RunWith(AndroidJUnit4::class)
 class BackEndTest {
+
+    val inviteCode = "VPOSOQ9J"
+    val callSign = "Kaivuri"
+
     @Before
     fun init() {
         val appContext = InstrumentationRegistry.getInstrumentation().context
@@ -51,14 +55,21 @@ class BackEndTest {
         Assert.assertTrue(result.isNotEmpty())
     }
 
+    @Test
+    fun testExchangeToken() = runBlocking {
+        val repository = TokenRepository()
+        val result = repository.exchangeToken()
+        Assert.assertNotNull(result)
+        Assert.assertTrue(result.isNotEmpty())
+    }
+
 
     @Test
     fun testEnrollment() = runBlocking {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
 
         val repository = EnrollmentRepository()
-        val inviteCode = "VPOSOQ9J"
-        val callSign = "EIOOTOTTA2"
+
 
         // Step 1: Generate KeyPair
         val utils = Utils()
@@ -101,7 +112,12 @@ class BackEndTest {
         Assert.assertTrue(result.isNotEmpty())
     }
 
-
-    // https://casual-halibut.solution.dev.pvarki.fi
+    @Test
+    fun testExchangeCode() = runBlocking {
+        val repository = TokenRepository()
+        val result = repository.exchangeCode("")
+        Assert.assertNotNull(result)
+        Assert.assertTrue(result.isNotEmpty())
+    }
 
 }

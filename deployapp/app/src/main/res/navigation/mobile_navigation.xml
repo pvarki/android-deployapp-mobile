@@ -3,8 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_createcsr">
+    app:startDestination="@+id/nav_home">
 
+    <activity
+        android:id="@+id/nav_ui_test"
+        android:name="com.pvarki.deployapp.ui.tests.UiTestsActivity"
+        android:label="UI Tests (manual)"
+        tools:layout="@layout/activity_ui_tests" />
     <activity
         android:id="@+id/nav_createcsr"
         android:name="com.pvarki.deployapp.ui.CreateCSRActivity"

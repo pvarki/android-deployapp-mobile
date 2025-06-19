@@ -2,6 +2,7 @@ package com.pvarki.deployapp.utils
 
 import android.app.AlertDialog
 import android.content.Context
+import android.os.Debug
 import android.view.LayoutInflater
 import com.pvarki.deployapp.R
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -26,6 +27,10 @@ import java.util.Date
 import javax.security.auth.x500.X500Principal
 
 class Utils {
+
+    fun isDebuggerAttached(): Boolean {
+        return Debug.isDebuggerConnected()
+    }
 
 
     fun showProgressDialog(context: Context): AlertDialog {

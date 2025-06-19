@@ -9,6 +9,7 @@ object PreferenceHelper {
     const val CALLSIGN = "CALLSIGN"
     const val INVITECODE = "INVITECODE"
     const val APPROVECODE = "APPROVECODE"
+    const val JWT = "JWT"
 
     fun customPreference(context: Context, name: String): SharedPreferences =
         context.getSharedPreferences(name, Context.MODE_PRIVATE)
@@ -39,6 +40,13 @@ object PreferenceHelper {
             ?: ""
         set(value) {
             edit().putString(APPROVECODE, value).apply()
+        }
+
+    var SharedPreferences.jwt
+        get() = getString(JWT, "")
+            ?: ""
+        set(value) {
+            edit().putString(JWT, value).apply()
         }
 
 }

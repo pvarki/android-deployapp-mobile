@@ -1,13 +1,16 @@
 package com.pvarki.deployapp.ui
 
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.pvarki.deployapp.App.Companion.AppPrefs
@@ -15,6 +18,7 @@ import com.pvarki.deployapp.R
 import com.pvarki.deployapp.data.model.EnrollRequest
 import com.pvarki.deployapp.data.repository.EnrollmentRepository
 import com.pvarki.deployapp.utils.PreferenceHelper.approveCode
+import com.pvarki.deployapp.utils.PreferenceHelper.jwt
 import com.pvarki.deployapp.utils.Utils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,6 +33,7 @@ class CreateCSRActivity : AppCompatActivity() {
     private lateinit var buttonCreateCsr: Button
     private lateinit var textViewApproveCode: TextView
     private lateinit var textViewErrorText: TextView
+    private lateinit var imageButtonCopyApproveCode: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +49,22 @@ class CreateCSRActivity : AppCompatActivity() {
 
         textViewErrorText = findViewById(R.id.text_view_error_text)
 
+        imageButtonCopyApproveCode = findViewById(R.id.image_button_copy)
+        imageButtonCopyApproveCode.setOnClickListener {
+            val approveCode = textViewApproveCode.text.toString()
+            if (approveCode.isNotEmpty()) {
+                val clipboard =
+                    getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                val clip = android.content.ClipData.newPlainText("Approve Code", approveCode)
+                clipboard.setPrimaryClip(clip)
+                Toast.makeText(
+                    this@CreateCSRActivity, "Approve code copied to clipboard: $approveCode",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Timber.w("No approve code to copy")
+            }
+        }
         // Set login button click listener
         buttonCreateCsr.setOnClickListener {
             hideKeyboard()
@@ -123,6 +144,7 @@ class CreateCSRActivity : AppCompatActivity() {
                     val result = repository.postEnEnrollResponse(er)
                     textViewApproveCode.text = result.approvecode
                     AppPrefs.approveCode = result.approvecode
+                    AppPrefs.jwt = result.jwt
                 }
             } catch (e: Exception) {
                 setErrorText("Failed to create CSR. Please try again. ${e.message}")

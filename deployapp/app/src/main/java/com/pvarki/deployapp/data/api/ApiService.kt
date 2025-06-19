@@ -1,11 +1,12 @@
 package com.pvarki.deployapp.data.api
 
 import com.pvarki.deployapp.data.model.AllProductsHealthCheckResponse
+import com.pvarki.deployapp.data.model.AllProductsInstructionFiles
 import com.pvarki.deployapp.data.model.BasicHealthCheckResponse
 import com.pvarki.deployapp.data.model.EnrollRequest
 import com.pvarki.deployapp.data.model.EnrollResponse
-import com.pvarki.deployapp.data.model.LoginRequest
-import com.pvarki.deployapp.data.model.LoginResponse
+import com.pvarki.deployapp.data.model.LoginCodeRequest
+import com.pvarki.deployapp.data.model.MLTSorJwtPayload
 import com.pvarki.deployapp.data.model.MyResponse
 import com.pvarki.deployapp.data.model.User
 import okhttp3.ResponseBody
@@ -17,8 +18,21 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
+
+    @GET("/api/v1/instructions/user")
+    suspend fun userInstructionFragment(): AllProductsInstructionFiles
+
+    @GET("/api/v1/check-auth/validuser")
+    suspend fun returnValiduserPayload(): MLTSorJwtPayload
+
+    @GET("/api/v1/check-auth/jwt")
+    suspend fun returnJwtPayload(): Response<ResponseBody>
+
     @GET("/api/v1/token/jwt/refresh")
     suspend fun refreshToken(): Response<ResponseBody>
+
+    @POST("/api/v1/token/code/exchange")
+    suspend fun exchangeCode(@Body loginCodeRequest: LoginCodeRequest): Response<ResponseBody>
 
     @POST("/api/v1/token/jwt/exchange")
     suspend fun exchangeToken(): Response<ResponseBody>
