@@ -25,8 +25,53 @@ import java.security.cert.Certificate
 import java.security.cert.X509Certificate
 import java.util.Date
 import javax.security.auth.x500.X500Principal
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
+import com.google.zxing.EncodeHintType
 
 class Utils {
+
+    fun createDecoratedQRImage(qrBitmap: Bitmap): Bitmap {
+        val width = qrBitmap.width + 100
+        val height = qrBitmap.height + 100
+        val composedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(composedBitmap)
+        val paint = Paint().apply {
+            color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+
+        // Draw background
+        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+
+        // Draw QR code centered
+        val left = (width - qrBitmap.width) / 2f
+        val top = (height - qrBitmap.height) / 2f
+        canvas.drawBitmap(qrBitmap, left, top, null)
+
+        return composedBitmap
+    }
+
+
+
+    fun generateQRCode(text: String, size: Int = 512): Bitmap {
+        val hints = mapOf(EncodeHintType.CHARACTER_SET to "UTF-8")
+        val bitMatrix: BitMatrix = MultiFormatWriter().encode(text, BarcodeFormat.QR_CODE, size, size, hints)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_565)
+
+        for (x in 0 until size) {
+            for (y in 0 until size) {
+                bitmap.setPixel(x, y, if (bitMatrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            }
+        }
+        return bitmap
+    }
+
 
     fun isDebuggerAttached(): Boolean {
         return Debug.isDebuggerConnected()

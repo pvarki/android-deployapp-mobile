@@ -18,7 +18,7 @@ bcpkixJdk18on = "1.81"
 retrofit = "3.0.0"
 okhttp = "4.12.0"
 timber = "5.0.1"
-
+zxing = "3.5.2"
 
 [libraries]
 
@@ -40,6 +40,7 @@ bcpkix-jdk18on = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
