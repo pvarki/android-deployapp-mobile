@@ -9,7 +9,7 @@
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Create new CSR (Certificate Signing Request)"
+        android:text="INFO: Set your personal invite code (Ask from your team leader, if you do not have one. Invite code is personal and has eight chars, e.g. GZMVIWAY\n\nAnd CALLSIGN. How do we call you? NightOwl, HockeyDude?"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -28,14 +28,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ask invice code from your team e.g. GZMVIWAY" />
+            android:text="Personal invite code " />
 
         <EditText
             android:id="@+id/edit_text_invite_code"
             style="@style/LargeTextStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Invite code"
+            android:hint="AABB3344"
             android:inputType="textCapCharacters" />
     </LinearLayout>
 
@@ -53,14 +53,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="How do we call you? NightOwl, HockeyDude?" />
+            android:text="Callsign" />
 
         <EditText
             android:id="@+id/edit_text_call_sign"
             style="@style/LargeTextStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Callsign"
+            android:hint="Seiskapakki"
             android:inputType="textCapSentences" />
     </LinearLayout>
 
@@ -70,11 +70,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Create CSR"
+        android:text="Request TEAM ACCESS"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/callsignLayout" />
+
+
+    <Button
+        android:id="@+id/button_scan_qr_code"
+        style="@style/LargeTextStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="SCAN QR CODE WITH CAMERA"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_create_csr" />
+
+
+    <TextView
+        android:id="@+id/text_view_or"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:gravity="center"
+        android:text="OR"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/button_create_csr" />
+
 
     <TextView
         android:id="@+id/text_view_error_text"
