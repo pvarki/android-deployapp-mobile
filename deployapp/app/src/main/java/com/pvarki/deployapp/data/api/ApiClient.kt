@@ -16,7 +16,7 @@ object ApiClient {
     private fun getToken(): String = AppPrefs.jwt
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        if (Utils().isDebuggerAttached())
+       // if (Utils().isDebuggerAttached())
             setLevel(
                 HttpLoggingInterceptor.Level.BODY
             )

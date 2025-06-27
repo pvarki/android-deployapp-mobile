@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="3sp"
-        android:text="UI tests"
+        android:text="UI tests (for prototyping)"
         android:textSize="20sp" />
 
     <ScrollView
@@ -25,6 +25,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <Button
+                android:id="@+id/buttonTest6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 6. Create and share CSR" />
 
             <Button
                 android:id="@+id/buttonTest5"

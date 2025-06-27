@@ -9,7 +9,7 @@
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="INFO: Set your personal invite code (Ask from your team leader, if you do not have one. Invite code is personal and has eight chars, e.g. GZMVIWAY\n\nAnd CALLSIGN. How do we call you? NightOwl, HockeyDude?"
+        android:text="INFO: Enter invite code. Ask from your team leader, if you do not have one. Invite code has eight chars, e.g. GZMVIWAY\n\nAnd CALLSIGN. How do we call you? NightOwl, HockeyDude?"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -28,7 +28,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Personal invite code " />
+            android:text="Invite code " />
 
         <EditText
             android:id="@+id/edit_text_invite_code"
@@ -114,7 +114,7 @@
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/button_create_csr" />
+        app:layout_constraintTop_toBottomOf="@id/button_scan_qr_code" />
 
     <TextView
         android:id="@+id/approveCodeTitle"

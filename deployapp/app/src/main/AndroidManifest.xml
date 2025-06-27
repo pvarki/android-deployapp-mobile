@@ -28,6 +28,7 @@
         <activity
             android:name=".ui.CreateCSRActivity"
             android:exported="true"
+            android:parentActivityName=".MainActivity"
             android:label="Deploy App" />
 
         <activity
@@ -38,6 +39,7 @@
         <activity
             android:name=".ui.tests.UiTestsActivity"
             android:exported="true"
+            android:parentActivityName=".MainActivity"
             android:label="UI Tests (manual)" />
 
         <provider

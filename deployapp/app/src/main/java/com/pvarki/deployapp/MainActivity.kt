@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow
+                R.id.nav_home/*, R.id.nav_gallery, R.id.nav_slideshow*/
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -66,36 +66,7 @@ class MainActivity : AppCompatActivity() {
         textViewInfo = findViewById(R.id.textViewInfo)
         val buttonCreateCertificate = findViewById<Button>(R.id.buttonCreateCertificate)
         buttonCreateCertificate.setOnClickListener {
-            try {
-                // Step 1: Generate KeyPair
-                val utils = Utils()
-                val keyPair = utils.generateKeyPair()
 
-                // Step 2: Generate Self-Signed Certificate
-                val certificate = utils.generateSelfSignedCertificate(keyPair, "TODO CN")
-                val newGuid = UUID.randomUUID()
-                // Step 3: Save PFX file with password
-                val fileName = "cert_$newGuid.pfx"
-                val pfxFilePath = utils.getCertDirectory(this) + "/" + fileName // Path to save the PFX
-                val pfxPassword = "mySecurePassword" // Password for the PFX file
-
-                utils.createPfxWithPassword(pfxFilePath, pfxPassword, certificate, keyPair.private)
-
-                //    Log.d(
-                //        MainActivity.TAG,
-                //        "PFX file created successfully at: $pfxFilePath"
-                //    )
-                val file = File(utils.getCertDirectory(this), fileName)
-                println("2. File absolute path: " + file.absolutePath)
-
-                shareFile(
-                    this@MainActivity,
-                    file,
-                    "com.pvarki.deployapp.fileprovider"
-                )
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
-            }
         }
 
         // Add BouncyCastle provider
@@ -123,27 +94,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun shareFile(context: Context, file: File, authority: String) {
-        println("3. File absolute path: " + file.absolutePath)
-
-        // Create a Uri for the file using FileProvider
-        val fileUri = FileProvider.getUriForFile(
-            context,
-            authority,  // Replace with your FileProvider authority
-            file
-        )
-
-        // Create an Intent to share the file
-        val shareIntent = Intent(Intent.ACTION_SEND)
-        shareIntent.setType("application/x-pkcs12") // Adjust MIME type as needed
-        shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri)
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "DeployApp")
-        shareIntent.putExtra(Intent.EXTRA_TEXT, "Cert file, pls install locally")
-        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-        // Start the activity to share the file
-        context.startActivity(shareIntent)
-    }
 
 
 
