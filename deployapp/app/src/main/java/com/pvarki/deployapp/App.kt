@@ -18,8 +18,8 @@ class App : Application() {
         super.onCreate()
         instance = this
         AppPrefs = PreferenceHelper.customPreference(this, this.packageName)
-        AppPrefs.inviteCode = ""
-        AppPrefs.approveCode = ""
+        //AppPrefs.inviteCode = ""
+        //AppPrefs.approveCode = ""
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

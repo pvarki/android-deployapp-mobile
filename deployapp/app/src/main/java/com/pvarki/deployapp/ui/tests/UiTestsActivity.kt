@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.util.UUID
 
@@ -52,7 +53,7 @@ class UiTestsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun test6()   {
+    private fun test6() {
         try {
             // Step 1: Generate KeyPair
             val utils = Utils()
@@ -109,7 +110,7 @@ class UiTestsActivity : AppCompatActivity() {
 
 
     private fun test5() = CoroutineScope(Dispatchers.IO).launch {
-        val qrBitmap = Utils().generateQRCode("https://busy-leopard.solution.dev.pvarki.fi")
+        val qrBitmap = Utils().generateQRCode("https://choice-reindeer.solution.dev.pvarki.fi")
         withContext(Dispatchers.Main) {
             showImageDialog(this@UiTestsActivity, qrBitmap)
         }
@@ -118,6 +119,41 @@ class UiTestsActivity : AppCompatActivity() {
     private fun test4() = CoroutineScope(Dispatchers.IO).launch {
         val result = InstructionsRepository().userInstructionFragment()
         showToast("test1 result: ${result.files.keys}")
+
+        // Get external files directory (private to your app)
+        val fileDir = this@UiTestsActivity.getExternalFilesDir(null)
+
+// Assume you got these from API
+        if (fileDir != null) {
+            Timber.d("File directory: ${fileDir.absolutePath}")
+        } else {
+            Timber.e("Failed to get external files directory")
+            return@launch
+        }
+
+        result.files.forEach { (key, value) ->
+
+            Timber.d("Key: $key, Value: $value")
+            value?.forEach { fileItem ->
+
+                Timber.d("File Item Title: ${fileItem.title}, Filename: ${fileItem.filename}")
+                val base64String = fileItem.data
+                val filename = fileItem.filename
+
+                val savedFile = Utils().saveBase64File(base64String, filename, fileDir)
+
+                if (savedFile != null) {
+                    Timber.d("File saved to: ${savedFile.absolutePath}")
+                } else {
+                    Timber.e("Failed to save file")
+                }
+                runOnUiThread {
+                    Toast.makeText(this@UiTestsActivity, "Filename: ${fileItem.filename} saved", Toast.LENGTH_SHORT).show()
+                }
+            }
+            // Timber.d("Key: $key, Value: $value")
+        }
+
     }
 
 

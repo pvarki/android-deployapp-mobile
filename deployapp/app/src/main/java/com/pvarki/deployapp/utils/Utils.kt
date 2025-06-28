@@ -33,8 +33,32 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.EncodeHintType
+import android.util.Base64
 
 class Utils {
+
+
+    fun saveBase64File(base64Data: String, filename: String, directory: File): File? {
+        return try {
+            // Remove the data URL prefix if present
+            val cleanBase64 = base64Data.substringAfter("base64,")
+
+            // Decode Base64 to byte array
+            val fileBytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+
+            // Create target file
+            val file = File(directory, filename)
+
+            // Write bytes to file
+            FileOutputStream(file).use { it.write(fileBytes) }
+
+            file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
 
     fun createDecoratedQRImage(qrBitmap: Bitmap): Bitmap {
         val width = qrBitmap.width + 100
