@@ -27,6 +27,12 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/buttonTest7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 7. Request enrollment status" />
+
+            <Button
                 android:id="@+id/buttonTest6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

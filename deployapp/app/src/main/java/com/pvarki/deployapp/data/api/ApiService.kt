@@ -5,6 +5,7 @@ import com.pvarki.deployapp.data.model.AllProductsInstructionFiles
 import com.pvarki.deployapp.data.model.BasicHealthCheckResponse
 import com.pvarki.deployapp.data.model.EnrollRequest
 import com.pvarki.deployapp.data.model.EnrollResponse
+import com.pvarki.deployapp.data.model.EnrollmentStatusOut
 import com.pvarki.deployapp.data.model.LoginCodeRequest
 import com.pvarki.deployapp.data.model.MLTSorJwtPayload
 import com.pvarki.deployapp.data.model.MyResponse
@@ -16,8 +17,12 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
+
+    @GET("/api/v1/enrollment/status")
+    suspend fun requestEnrollmentStatus(@Query("callsign") callSign:String): EnrollmentStatusOut
 
     @GET("/api/v1/instructions/user")
     suspend fun userInstructionFragment(): AllProductsInstructionFiles

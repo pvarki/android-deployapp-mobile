@@ -13,11 +13,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.pvarki.deployapp.App
 import com.pvarki.deployapp.App.Companion.AppPrefs
 import com.pvarki.deployapp.R
 import com.pvarki.deployapp.data.model.EnrollRequest
 import com.pvarki.deployapp.data.repository.EnrollmentRepository
 import com.pvarki.deployapp.utils.PreferenceHelper.approveCode
+import com.pvarki.deployapp.utils.PreferenceHelper.callSign
 import com.pvarki.deployapp.utils.PreferenceHelper.jwt
 import com.pvarki.deployapp.utils.Utils
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +43,8 @@ class CreateCSRActivity : AppCompatActivity() {
 
         // Initialize views
         editTextCallSign = findViewById(R.id.edit_text_call_sign)
+        editTextCallSign.setText(AppPrefs.callSign)
+
         editTextInviteCode = findViewById(R.id.edit_text_invite_code)
 
         buttonCreateCsr = findViewById(R.id.button_create_csr)
@@ -83,6 +87,7 @@ class CreateCSRActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            AppPrefs.callSign = callSign
             createCSR(callSign, inviteCode)
         }
     }

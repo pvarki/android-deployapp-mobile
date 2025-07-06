@@ -11,9 +11,12 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import com.pvarki.deployapp.App
 import com.pvarki.deployapp.R
+import com.pvarki.deployapp.data.repository.EnrollmentRepository
 import com.pvarki.deployapp.data.repository.InfoRepository
 import com.pvarki.deployapp.data.repository.InstructionsRepository
+import com.pvarki.deployapp.utils.PreferenceHelper.callSign
 import com.pvarki.deployapp.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +34,7 @@ class UiTestsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ui_tests)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-
+        findViewById<Button>(R.id.buttonTest7).setOnClickListener { test7() }
         findViewById<Button>(R.id.buttonTest6).setOnClickListener { test6() }
         findViewById<Button>(R.id.buttonTest5).setOnClickListener { test5() }
         findViewById<Button>(R.id.buttonTest4).setOnClickListener { test4() }
@@ -51,6 +54,13 @@ class UiTestsActivity : AppCompatActivity() {
             .setView(imageView)
             .setPositiveButton("Close", null)
             .show()
+    }
+
+    private fun test7() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = EnrollmentRepository().requestEnrollmentStatus(App.AppPrefs.callSign)
+            showToast("test1 result: $result")
+        }
     }
 
     private fun test6() {
@@ -134,7 +144,7 @@ class UiTestsActivity : AppCompatActivity() {
         result.files.forEach { (key, value) ->
 
             Timber.d("Key: $key, Value: $value")
-            value?.forEach { fileItem ->
+            value.forEach { fileItem ->
 
                 Timber.d("File Item Title: ${fileItem.title}, Filename: ${fileItem.filename}")
                 val base64String = fileItem.data
@@ -148,14 +158,15 @@ class UiTestsActivity : AppCompatActivity() {
                     Timber.e("Failed to save file")
                 }
                 runOnUiThread {
-                    Toast.makeText(this@UiTestsActivity, "Filename: ${fileItem.filename} saved", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@UiTestsActivity,
+                        "Filename: ${fileItem.filename} saved",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
-            // Timber.d("Key: $key, Value: $value")
         }
-
     }
-
 
     private fun test3() {
         runOnUiThread {
