@@ -13,7 +13,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.pvarki.deployapp.App
 import com.pvarki.deployapp.App.Companion.AppPrefs
 import com.pvarki.deployapp.R
 import com.pvarki.deployapp.data.model.EnrollRequest

@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.pvarki.deployapp.App
 import com.pvarki.deployapp.R
+import com.pvarki.deployapp.data.repository.EndUserPfxRepository
 import com.pvarki.deployapp.data.repository.EnrollmentRepository
 import com.pvarki.deployapp.data.repository.InfoRepository
 import com.pvarki.deployapp.data.repository.InstructionsRepository
@@ -34,6 +35,8 @@ class UiTestsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ui_tests)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        findViewById<Button>(R.id.buttonTest9).setOnClickListener { test9() }
+        findViewById<Button>(R.id.buttonTest8).setOnClickListener { test8() }
         findViewById<Button>(R.id.buttonTest7).setOnClickListener { test7() }
         findViewById<Button>(R.id.buttonTest6).setOnClickListener { test6() }
         findViewById<Button>(R.id.buttonTest5).setOnClickListener { test5() }
@@ -54,6 +57,53 @@ class UiTestsActivity : AppCompatActivity() {
             .setView(imageView)
             .setPositiveButton("Close", null)
             .show()
+    }
+
+    private fun test9() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = InfoRepository().returnMtlsPayload()
+            showToast("Result: ${result}")
+        }
+    }
+
+    private fun test8() {
+        CoroutineScope(Dispatchers.IO).launch {
+            // 1. Get the full response
+            val response = EndUserPfxRepository().getUserPfx(App.AppPrefs.callSign)
+            if (response.isSuccessful && response.body() != null) {
+                // 2. Extract filename from Content-Disposition header
+                val contentDisposition = response.headers()["Content-Disposition"]
+                val fileName = contentDisposition
+                    ?.substringAfter("filename=")
+                    ?.replace("\"", "")
+                    ?: "certificate.pfx"
+
+                // 3. Save file to disk
+                val fileDir = Utils().getCertDirectory(this@UiTestsActivity)
+                val file = File(fileDir, fileName)
+                response.body()!!.byteStream().use { input ->
+                    file.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                showToast("Result saved to: ${file.absolutePath}")
+
+                // 4. Prompt user to install
+                val uri = FileProvider.getUriForFile(
+                    this@UiTestsActivity,
+                    "com.pvarki.deployapp.fileprovider",
+                    file
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/x-pkcs12")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(intent, "Install certificate"))
+            } else {
+                showToast("Failed to download certificate")
+            }
+        }
     }
 
     private fun test7() {

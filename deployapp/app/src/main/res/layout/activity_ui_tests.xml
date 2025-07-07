@@ -27,6 +27,18 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/buttonTest9"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 9. returnMtlsPayload" />
+
+            <Button
+                android:id="@+id/buttonTest8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 8. Get user pfx" />
+
+            <Button
                 android:id="@+id/buttonTest7"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

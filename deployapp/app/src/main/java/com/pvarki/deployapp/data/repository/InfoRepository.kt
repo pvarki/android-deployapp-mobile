@@ -18,4 +18,12 @@ class InfoRepository {
         return response
     }
 
+    suspend fun returnMtlsPayload(): String {
+        val response = api.returnMtlsPayload()
+        return response.body()?.string() ?: throw HttpException(response)
+    }
+
+
+
+
 }
