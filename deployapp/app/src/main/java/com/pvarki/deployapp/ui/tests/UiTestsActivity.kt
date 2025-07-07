@@ -61,55 +61,71 @@ class UiTestsActivity : AppCompatActivity() {
 
     private fun test9() {
         CoroutineScope(Dispatchers.IO).launch {
-            val result = InfoRepository().returnMtlsPayload()
-            showToast("Result: ${result}")
+            try {
+                val result = InfoRepository().returnMtlsPayload()
+                showToast("Result: ${result}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
         }
     }
 
     private fun test8() {
         CoroutineScope(Dispatchers.IO).launch {
-            // 1. Get the full response
-            val response = EndUserPfxRepository().getUserPfx(App.AppPrefs.callSign)
-            if (response.isSuccessful && response.body() != null) {
-                // 2. Extract filename from Content-Disposition header
-                val contentDisposition = response.headers()["Content-Disposition"]
-                val fileName = contentDisposition
-                    ?.substringAfter("filename=")
-                    ?.replace("\"", "")
-                    ?: "certificate.pfx"
+            try {
+                // 1. Get the full response
+                val response = EndUserPfxRepository().getUserPfx(App.AppPrefs.callSign)
+                if (response.isSuccessful && response.body() != null) {
+                    // 2. Extract filename from Content-Disposition header
+                    val contentDisposition = response.headers()["Content-Disposition"]
+                    val fileName = contentDisposition
+                        ?.substringAfter("filename=")
+                        ?.replace("\"", "")
+                        ?: "certificate.pfx"
 
-                // 3. Save file to disk
-                val fileDir = Utils().getCertDirectory(this@UiTestsActivity)
-                val file = File(fileDir, fileName)
-                response.body()!!.byteStream().use { input ->
-                    file.outputStream().use { output ->
-                        input.copyTo(output)
+                    // 3. Save file to disk
+                    val fileDir = Utils().getCertDirectory(this@UiTestsActivity)
+                    val file = File(fileDir, fileName)
+                    response.body()!!.byteStream().use { input ->
+                        file.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
                     }
-                }
 
-                showToast("Result saved to: ${file.absolutePath}")
+                    showToast("Result saved to: ${file.absolutePath}")
 
-                // 4. Prompt user to install
-                val uri = FileProvider.getUriForFile(
-                    this@UiTestsActivity,
-                    "com.pvarki.deployapp.fileprovider",
-                    file
-                )
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, "application/x-pkcs12")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    // 4. Prompt user to install
+                    val uri = FileProvider.getUriForFile(
+                        this@UiTestsActivity,
+                        "com.pvarki.deployapp.fileprovider",
+                        file
+                    )
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(uri, "application/x-pkcs12")
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    startActivity(Intent.createChooser(intent, "Install certificate"))
+                } else {
+                    showToast("Failed to download certificate")
                 }
-                startActivity(Intent.createChooser(intent, "Install certificate"))
-            } else {
-                showToast("Failed to download certificate")
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
             }
         }
     }
 
+
     private fun test7() {
         CoroutineScope(Dispatchers.IO).launch {
-            val result = EnrollmentRepository().requestEnrollmentStatus(App.AppPrefs.callSign)
-            showToast("test1 result: $result")
+            try {
+                val result = EnrollmentRepository().requestEnrollmentStatus(App.AppPrefs.callSign)
+                showToast("test1 result: $result")
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
         }
     }
 
@@ -141,8 +157,13 @@ class UiTestsActivity : AppCompatActivity() {
                 file,
                 "com.pvarki.deployapp.fileprovider"
             )
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
+        } catch (e: Exception) {
+            Timber.e(e, "Error")
+            Toast.makeText(
+                this@UiTestsActivity,
+                "Error: ${e.message}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -170,51 +191,61 @@ class UiTestsActivity : AppCompatActivity() {
 
 
     private fun test5() = CoroutineScope(Dispatchers.IO).launch {
-        val qrBitmap = Utils().generateQRCode("https://choice-reindeer.solution.dev.pvarki.fi")
-        withContext(Dispatchers.Main) {
-            showImageDialog(this@UiTestsActivity, qrBitmap)
+        try {
+            val qrBitmap = Utils().generateQRCode("https://choice-reindeer.solution.dev.pvarki.fi")
+            withContext(Dispatchers.Main) {
+                showImageDialog(this@UiTestsActivity, qrBitmap)
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error")
+            showToast("Error: ${e.message}")
         }
     }
 
     private fun test4() = CoroutineScope(Dispatchers.IO).launch {
-        val result = InstructionsRepository().userInstructionFragment()
-        showToast("test1 result: ${result.files.keys}")
+        try {
+            val result = InstructionsRepository().userInstructionFragment()
+            showToast("test1 result: ${result.files.keys}")
 
-        // Get external files directory (private to your app)
-        val fileDir = this@UiTestsActivity.getExternalFilesDir(null)
+            // Get external files directory (private to your app)
+            val fileDir = this@UiTestsActivity.getExternalFilesDir(null)
 
-// Assume you got these from API
-        if (fileDir != null) {
-            Timber.d("File directory: ${fileDir.absolutePath}")
-        } else {
-            Timber.e("Failed to get external files directory")
-            return@launch
-        }
+            // Assume you got these from API
+            if (fileDir != null) {
+                Timber.d("File directory: ${fileDir.absolutePath}")
+            } else {
+                Timber.e("Failed to get external files directory")
+                return@launch
+            }
 
-        result.files.forEach { (key, value) ->
+            result.files.forEach { (key, value) ->
 
-            Timber.d("Key: $key, Value: $value")
-            value.forEach { fileItem ->
+                Timber.d("Key: $key, Value: $value")
+                value.forEach { fileItem ->
 
-                Timber.d("File Item Title: ${fileItem.title}, Filename: ${fileItem.filename}")
-                val base64String = fileItem.data
-                val filename = fileItem.filename
+                    Timber.d("File Item Title: ${fileItem.title}, Filename: ${fileItem.filename}")
+                    val base64String = fileItem.data
+                    val filename = fileItem.filename
 
-                val savedFile = Utils().saveBase64File(base64String, filename, fileDir)
+                    val savedFile = Utils().saveBase64File(base64String, filename, fileDir)
 
-                if (savedFile != null) {
-                    Timber.d("File saved to: ${savedFile.absolutePath}")
-                } else {
-                    Timber.e("Failed to save file")
-                }
-                runOnUiThread {
-                    Toast.makeText(
-                        this@UiTestsActivity,
-                        "Filename: ${fileItem.filename} saved",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    if (savedFile != null) {
+                        Timber.d("File saved to: ${savedFile.absolutePath}")
+                    } else {
+                        Timber.e("Failed to save file")
+                    }
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@UiTestsActivity,
+                            "Filename: ${fileItem.filename} saved",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             }
+        } catch (e: Exception) {
+            Timber.e(e, "Error")
+            showToast("Error: ${e.message}")
         }
     }
 
@@ -225,15 +256,32 @@ class UiTestsActivity : AppCompatActivity() {
     }
 
     private fun test2() = CoroutineScope(Dispatchers.IO).launch {
-        val result = InfoRepository().returnValiduserPayload()
-        withContext(Dispatchers.Main) {
-            Toast.makeText(this@UiTestsActivity, "test2 result: $result", Toast.LENGTH_SHORT).show()
+        try {
+            val result = InfoRepository().exchangeToken()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@UiTestsActivity, "test2 result: $result", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error in test2")
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    this@UiTestsActivity,
+                    "test2 error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
     private fun test1() = CoroutineScope(Dispatchers.IO).launch {
-        val result = InfoRepository().exchangeToken()
-        showToast("test1 result: $result")
+        try {
+            val result = InfoRepository().exchangeToken()
+            showToast("test1 result: $result")
+        } catch (e: Exception) {
+            Timber.e(e, "Error in test1")
+            showToast("test1 error: ${e.message}")
+        }
     }
 
     private suspend fun showToast(message: String) = withContext(Dispatchers.Main) {
