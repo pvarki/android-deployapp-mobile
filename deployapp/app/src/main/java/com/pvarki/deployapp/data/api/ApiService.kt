@@ -21,11 +21,10 @@ import retrofit2.http.Query
 
 interface ApiService {
 
-
     @GET("/api/v1/check-auth/mtls")
     suspend fun returnMtlsPayload() : Response<ResponseBody>
 
-    @GET("/api/v1/enduserpfx/{callsign}")
+    @GET("/api/v1/enduserpfx/{callsign}.pfx")
     suspend fun getUserPfx(@Path("callsign") callSign: String): Response<ResponseBody>
 
     @GET("/api/v1/enrollment/status")

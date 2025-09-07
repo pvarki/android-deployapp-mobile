@@ -192,7 +192,7 @@ class UiTestsActivity : AppCompatActivity() {
 
     private fun test5() = CoroutineScope(Dispatchers.IO).launch {
         try {
-            val qrBitmap = Utils().generateQRCode("https://choice-reindeer.solution.dev.pvarki.fi")
+            val qrBitmap = Utils().generateQRCode("https://busy-leopard.solution.dev.pvarki.fi")
             withContext(Dispatchers.Main) {
                 showImageDialog(this@UiTestsActivity, qrBitmap)
             }
