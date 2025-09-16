@@ -15,6 +15,7 @@ import com.pvarki.deployapp.App
 import com.pvarki.deployapp.R
 import com.pvarki.deployapp.data.repository.EndUserPfxRepository
 import com.pvarki.deployapp.data.repository.EnrollmentRepository
+import com.pvarki.deployapp.data.repository.HealthcheckRepository
 import com.pvarki.deployapp.data.repository.InfoRepository
 import com.pvarki.deployapp.data.repository.InstructionsRepository
 import com.pvarki.deployapp.utils.PreferenceHelper.callSign
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.io.InputStream
 import java.util.UUID
 
 
@@ -35,6 +37,7 @@ class UiTestsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ui_tests)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        findViewById<Button>(R.id.buttonTest10).setOnClickListener { test10() }
         findViewById<Button>(R.id.buttonTest9).setOnClickListener { test9() }
         findViewById<Button>(R.id.buttonTest8).setOnClickListener { test8() }
         findViewById<Button>(R.id.buttonTest7).setOnClickListener { test7() }
@@ -58,6 +61,29 @@ class UiTestsActivity : AppCompatActivity() {
             .setPositiveButton("Close", null)
             .show()
     }
+
+
+    private fun test10() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val callSign = "Qqwweerr"
+                val fileName = "$callSign.pfx"
+                val pfxFilePath = Utils().getCertDirectory(this@UiTestsActivity) + "/" + fileName
+                val inputStream: InputStream = File(pfxFilePath).inputStream()
+                val pfxPassword = callSign // Password for the PFX file
+                val result = HealthcheckRepository().requestHealthCheckMtls(
+                    inputStream,
+                    pfxPassword,
+                    this@UiTestsActivity
+                )
+                showToast("Result: ${result}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
 
     private fun test9() {
         CoroutineScope(Dispatchers.IO).launch {

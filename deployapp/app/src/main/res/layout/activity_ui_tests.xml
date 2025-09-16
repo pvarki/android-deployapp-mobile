@@ -27,6 +27,12 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/buttonTest10"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 10. Healthcheck MTLS" />
+
+            <Button
                 android:id="@+id/buttonTest9"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
