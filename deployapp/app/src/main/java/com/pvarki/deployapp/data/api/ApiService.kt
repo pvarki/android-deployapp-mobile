@@ -21,6 +21,10 @@ import retrofit2.http.Query
 
 interface ApiService {
 
+    // Get the signed cert in PEM format (no keys)
+    @GET("/api/v1/enduserpfx/{callsign}.pem")
+    suspend fun getUserPem(@Path("callsign") callSign: String): Response<ResponseBody>
+
     @GET("/api/v1/check-auth/mtls")
     suspend fun returnMtlsPayload() : Response<ResponseBody>
 

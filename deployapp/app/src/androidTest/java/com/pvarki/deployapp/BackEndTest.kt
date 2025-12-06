@@ -28,7 +28,7 @@ class BackEndTest {
     fun init() {
         val appContext = InstrumentationRegistry.getInstrumentation().context
         Assert.assertNotNull(appContext)
-        App.AppPrefs.restApiBaseUrl = "https://busy-leopard.solution.dev.pvarki.fi"
+        App.AppPrefs.restApiBaseUrl = "https://tidy-stag.solution.dev.pvarki.fi"
     }
 
     @Test

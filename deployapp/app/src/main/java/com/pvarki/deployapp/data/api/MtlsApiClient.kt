@@ -40,7 +40,7 @@ object MtlsApiClient {
                 .toString()
         ) {
             retrofitInstance = Retrofit.Builder()
-                .baseUrl("https://mtls.busy-leopard.solution.dev.pvarki.fi")
+                .baseUrl("https://mtls.tidy-stag.solution.dev.pvarki.fi")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(createMutualTlsHttpClient(certInputStream, certPassword, context))
                 .build()

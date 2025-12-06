@@ -27,6 +27,18 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/buttonTest12"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 12. Fetch Seiskapakki.pem file from server" />
+
+            <Button
+                android:id="@+id/buttonTest11"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 11. Fetch Seiskapakki.pfx file from server" />
+
+            <Button
                 android:id="@+id/buttonTest10"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
