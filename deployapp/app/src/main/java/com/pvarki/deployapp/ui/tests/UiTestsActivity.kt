@@ -40,6 +40,7 @@ class UiTestsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ui_tests)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        findViewById<Button>(R.id.buttonTest13).setOnClickListener { test13() }
         findViewById<Button>(R.id.buttonTest12).setOnClickListener { test12() }
         findViewById<Button>(R.id.buttonTest11).setOnClickListener { test11() }
         findViewById<Button>(R.id.buttonTest10).setOnClickListener { test10() }
@@ -68,6 +69,24 @@ class UiTestsActivity : AppCompatActivity() {
     }
 
 
+    fun installPfxCertificate(context: Context, fileName: String, callSign: String) {
+        val certFile = File(context.filesDir, fileName)
+
+        if (certFile.exists()) {
+            val certBytes = certFile.readBytes()
+
+            val installIntent = KeyChain.createInstallIntent().apply {
+                putExtra(KeyChain.EXTRA_PKCS12, certBytes)
+                putExtra(KeyChain.EXTRA_NAME, callSign) // optional alias name
+            }
+
+            context.startActivity(installIntent)
+        } else {
+            throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
+        }
+    }
+
+
     fun installPemCertificate(context: Context, fileName: String, callSign: String) {
         val certFile = File(context.filesDir, fileName)
 
@@ -82,6 +101,41 @@ class UiTestsActivity : AppCompatActivity() {
             context.startActivity(installIntent)
         } else {
             throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
+        }
+    }
+
+    private fun test13() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 1. Get the full response
+                //val callSign = "Seiskapakki"
+                val callSign = "Kasipakki"
+                val response = EndUserPfxRepository().getUserPfx(callSign)
+                val formatter = java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS")
+                val timestamp = formatter.format(java.util.Date())
+                val outFilename = "${callSign}_$timestamp.pfx"
+
+                val outFile = File(this@UiTestsActivity.filesDir, outFilename)
+                Timber.d(  "$outFile created")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { body ->
+                        // Stream the response into the file
+                        outFile.outputStream().use { fileOut ->
+                            body.byteStream().use { input ->
+                                input.copyTo(fileOut)
+                            }
+                        }
+                    }
+                } else {
+                    throw IOException("Failed to download PEM: ${response.code()} ${response.message()}")
+                }
+
+                installPfxCertificate(this@UiTestsActivity, outFilename, callSign)
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
         }
     }
 
@@ -108,45 +162,7 @@ class UiTestsActivity : AppCompatActivity() {
                     throw IOException("Failed to download PEM: ${response.code()} ${response.message()}")
                 }
 
-
                 installPemCertificate(this@UiTestsActivity, "${callSign}.pem", callSign)
-
-                /*
-                                if (response.isSuccessful && response.body() != null) {
-                                    // 2. Extract filename from Content-Disposition header
-                                    val contentDisposition = response.headers()["Content-Disposition"]
-                                    val fileName = contentDisposition
-                                        ?.substringAfter("filename=")
-                                        ?.replace("\"", "")
-                                        ?: "certificate.pfx"
-
-                                    // 3. Save file to disk
-                                    val fileDir = Utils().getCertDirectory(this@UiTestsActivity)
-                                    val file = File(fileDir, fileName)
-                                    response.body()!!.byteStream().use { input ->
-                                        file.outputStream().use { output ->
-                                            input.copyTo(output)
-                                        }
-                                    }
-
-                                    showToast("Result saved to: ${file.absolutePath}")
-
-                                    // 4. Prompt user to install
-                                    val uri = FileProvider.getUriForFile(
-                                        this@UiTestsActivity,
-                                        "com.pvarki.deployapp.fileprovider",
-                                        file
-                                    )
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(uri, "application/x-pkcs12")
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    startActivity(Intent.createChooser(intent, "Install certificate"))
-                                } else {
-                                    showToast("Failed to download certificate")
-                                }
-                                */
-
             } catch (e: Exception) {
                 Timber.e(e, "Error")
                 showToast("Error: ${e.message}")
