@@ -40,6 +40,7 @@ class UiTestsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ui_tests)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        findViewById<Button>(R.id.buttonTest14).setOnClickListener { test14() }
         findViewById<Button>(R.id.buttonTest13).setOnClickListener { test13() }
         findViewById<Button>(R.id.buttonTest12).setOnClickListener { test12() }
         findViewById<Button>(R.id.buttonTest11).setOnClickListener { test11() }
@@ -103,6 +104,52 @@ class UiTestsActivity : AppCompatActivity() {
             throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
         }
     }
+
+
+    private fun test14() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 1. Get the full response
+                //val callSign = "Seiskapakki"
+                val callSign = "Kasipakki2"
+                val response = EndUserPfxRepository().getUserPfx(callSign)
+                val formatter = java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS")
+                val timestamp = formatter.format(java.util.Date())
+                val outFilename = "${callSign}_$timestamp.pfx"
+
+                val outFile = File(this@UiTestsActivity.filesDir, outFilename)
+                Timber.d(  "$outFile created")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { body ->
+                        // Stream the response into the file
+                        outFile.outputStream().use { fileOut ->
+                            body.byteStream().use { input ->
+                                input.copyTo(fileOut)
+                            }
+                        }
+                    }
+                } else {
+                    throw IOException("Failed to download PEM: ${response.code()} ${response.message()}")
+                }
+
+                val uri = FileProvider.getUriForFile(
+                    this@UiTestsActivity,
+                    "com.pvarki.deployapp.fileprovider",
+                    outFile
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/x-pkcs12")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(intent, "Install certificate"))
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
 
     private fun test13() {
         CoroutineScope(Dispatchers.IO).launch {
