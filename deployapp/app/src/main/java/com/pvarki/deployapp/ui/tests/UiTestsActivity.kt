@@ -20,6 +20,7 @@ import com.pvarki.deployapp.data.repository.HealthcheckRepository
 import com.pvarki.deployapp.data.repository.InfoRepository
 import com.pvarki.deployapp.data.repository.InstructionsRepository
 import com.pvarki.deployapp.utils.PreferenceHelper.callSign
+import com.pvarki.deployapp.utils.PreferenceHelper.restApiBaseUrl
 import com.pvarki.deployapp.utils.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -85,7 +86,6 @@ class UiTestsActivity : AppCompatActivity() {
     }
 
 
-    // https://mtls.tidy-stag.solution.dev.pvarki.fi/api/docs
     private fun test12() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -375,7 +375,7 @@ class UiTestsActivity : AppCompatActivity() {
 
     private fun test5() = CoroutineScope(Dispatchers.IO).launch {
         try {
-            val qrBitmap = Utils().generateQRCode("https://tidy-stag.solution.dev.pvarki.fi")
+            val qrBitmap = Utils().generateQRCode(App.AppPrefs.restApiBaseUrl)
             withContext(Dispatchers.Main) {
                 showImageDialog(this@UiTestsActivity, qrBitmap)
             }

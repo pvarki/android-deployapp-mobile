@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 
 object PreferenceHelper {
     const val REST_API_BASE_URL = "REST_API_BASE_URL"
-    const val REST_API_BASE_URL_DEFAULT_VALUE = "https://localmaeher.dev.pvarki.fi:4439"
+    const val REST_API_BASE_URL_DEFAULT_VALUE = ""
     const val CALLSIGN = "CALLSIGN"
     const val INVITECODE = "INVITECODE"
     const val APPROVECODE = "APPROVECODE"
