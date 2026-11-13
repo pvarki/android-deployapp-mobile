@@ -11,7 +11,10 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.pvarki.deployapp.App.Companion.AppPrefs
 import com.pvarki.deployapp.R
@@ -37,8 +40,19 @@ class CreateCSRActivity : AppCompatActivity() {
     private lateinit var imageButtonCopyApproveCode: ImageButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_csr)
+
+       // setSupportActionBar(findViewById(R.id.toolbar))
+      //  supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
+            findViewById<android.view.View>(R.id.app_bar_layout).setPadding(0, systemBars.top, 0, 0)
+            insets
+        }
 
         // Initialize views
         editTextCallSign = findViewById(R.id.edit_text_call_sign)
@@ -108,8 +122,11 @@ class CreateCSRActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main, menu)
+        return true
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressedDispatcher.onBackPressed()
         return true
     }
 
@@ -149,6 +166,8 @@ class CreateCSRActivity : AppCompatActivity() {
                     textViewApproveCode.text = result.approvecode
                     AppPrefs.approveCode = result.approvecode
                     AppPrefs.jwt = result.jwt
+                    Timber.d("JWT: ${AppPrefs.jwt}")
+                    Timber.d("Approve code: ${AppPrefs.approveCode}")
                 }
             } catch (e: Exception) {
                 setErrorText("Failed to create CSR. Please try again. ${e.message}")

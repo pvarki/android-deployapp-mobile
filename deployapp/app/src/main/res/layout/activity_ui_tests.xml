@@ -27,31 +27,83 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/buttonTest23"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 23 Get callsign.pem, combine it with private key and install" />
+
+            <Button
+                android:id="@+id/buttonTest22"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 22 Get signedChainFile from server.pem, combine it with private key and install" />
+
+            <Button
+                android:id="@+id/buttonTest21"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 21 Combine cert_callsign.pfx and pem" />
+
+            <Button
+                android:id="@+id/buttonTest20"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 20 Use MLTS with cert" />
+
+            <Button
+                android:id="@+id/buttonTest19"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 19 NOT IN USE" />
+
+            <Button
+                android:id="@+id/buttonTest18"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 18 NOT IN USE" />
+
+
+            <Button
+                android:id="@+id/buttonTest17"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 17 NOT IN USE" />
+
+            <Button
+                android:id="@+id/buttonTest16"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 16 Create Legacy PFX (3DES/SHA1)" />
+
+            <Button
+                android:id="@+id/buttonTest15"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test 15 Fetch jwtPubKey from server" />
+
+            <Button
                 android:id="@+id/buttonTest14"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Test 14 Fetch Seiskapakki.pfx file from server and install it" />
 
-
-
             <Button
                 android:id="@+id/buttonTest13"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Test 13. Fetch Seiskapakki.pfx file from server and install it" />
-
+                android:text="Test 13. Fetch Kasipakki2.pfx file from server and install it" />
 
             <Button
                 android:id="@+id/buttonTest12"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Test 12. Fetch Seiskapakki.pem file from server" />
+                android:text="Test 12. Fetch Kasipakki2.pem file from server" />
 
             <Button
                 android:id="@+id/buttonTest11"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Test 11. Fetch Seiskapakki.pfx file from server" />
+                android:text="Test 11. Fetch Kasipakki2.pfx file from server" />
 
             <Button
                 android:id="@+id/buttonTest10"

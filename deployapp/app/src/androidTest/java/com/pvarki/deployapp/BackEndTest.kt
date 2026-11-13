@@ -22,7 +22,7 @@ import javax.security.auth.x500.X500Principal
 class BackEndTest {
 
     val inviteCode = "VPOSOQ9J"
-    val callSign = "Kaivuri"
+    val callSign = "Kasipakki3"
 
     @Before
     fun init() {

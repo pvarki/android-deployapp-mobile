@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.pvarki.deployapp.utils.PreferenceHelper
 import com.pvarki.deployapp.utils.PreferenceHelper.approveCode
 import com.pvarki.deployapp.utils.PreferenceHelper.inviteCode
+import com.pvarki.deployapp.utils.PreferenceHelper.jwt
 import timber.log.Timber
 
 class App : Application() {
@@ -24,5 +25,6 @@ class App : Application() {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+        Timber.d("App onCreate JWT: ${AppPrefs.jwt}")
     }
 }

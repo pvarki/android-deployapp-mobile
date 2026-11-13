@@ -13,13 +13,16 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.pvarki.deployapp.App
+import com.pvarki.deployapp.App.Companion.AppPrefs
 import com.pvarki.deployapp.R
 import com.pvarki.deployapp.data.repository.EndUserPfxRepository
 import com.pvarki.deployapp.data.repository.EnrollmentRepository
 import com.pvarki.deployapp.data.repository.HealthcheckRepository
 import com.pvarki.deployapp.data.repository.InfoRepository
 import com.pvarki.deployapp.data.repository.InstructionsRepository
+import com.pvarki.deployapp.data.repository.UtilsRepository
 import com.pvarki.deployapp.utils.PreferenceHelper.callSign
+import com.pvarki.deployapp.utils.PreferenceHelper.jwt
 import com.pvarki.deployapp.utils.PreferenceHelper.restApiBaseUrl
 import com.pvarki.deployapp.utils.Utils
 import kotlinx.coroutines.CoroutineScope
@@ -28,18 +31,35 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 import java.util.UUID
 
 
 class UiTestsActivity : AppCompatActivity() {
+
+    private val callSign: String
+        get() = App.AppPrefs.callSign.ifBlank { "Kolmospakki" }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ui_tests)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+        Timber.d("UiTestsActivity onCreate. callSign: $callSign, baseUrl: ${App.AppPrefs.restApiBaseUrl}")
+
+        findViewById<Button>(R.id.buttonTest23).setOnClickListener { test23() }
+        findViewById<Button>(R.id.buttonTest22).setOnClickListener { test22() }
+        findViewById<Button>(R.id.buttonTest21).setOnClickListener { test21() }
+        findViewById<Button>(R.id.buttonTest20).setOnClickListener { test20() }
+        findViewById<Button>(R.id.buttonTest19).setOnClickListener { test19() }
+        findViewById<Button>(R.id.buttonTest18).setOnClickListener { test18() }
+        findViewById<Button>(R.id.buttonTest17).setOnClickListener { test17() }
+        findViewById<Button>(R.id.buttonTest16).setOnClickListener { test16() }
+        findViewById<Button>(R.id.buttonTest15).setOnClickListener { test15() }
         findViewById<Button>(R.id.buttonTest14).setOnClickListener { test14() }
         findViewById<Button>(R.id.buttonTest13).setOnClickListener { test13() }
         findViewById<Button>(R.id.buttonTest12).setOnClickListener { test12() }
@@ -56,69 +76,67 @@ class UiTestsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonTest1).setOnClickListener { test1() }
     }
 
-    fun showImageDialog(context: Context, imageBitmap: Bitmap) {
-        val imageView = ImageView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(600, 600)
-            setImageBitmap(imageBitmap)
-        }
-
-        AlertDialog.Builder(context)
-            .setTitle("Here's your QR code")
-            .setView(imageView)
-            .setPositiveButton("Close", null)
-            .show()
-    }
-
-
-    fun installPfxCertificate(context: Context, fileName: String, callSign: String) {
-        val certFile = File(context.filesDir, fileName)
-
-        if (certFile.exists()) {
-            val certBytes = certFile.readBytes()
-
-            val installIntent = KeyChain.createInstallIntent().apply {
-                putExtra(KeyChain.EXTRA_PKCS12, certBytes)
-                putExtra(KeyChain.EXTRA_NAME, callSign) // optional alias name
-            }
-
-            context.startActivity(installIntent)
-        } else {
-            throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
-        }
-    }
-
-
-    fun installPemCertificate(context: Context, fileName: String, callSign: String) {
-        val certFile = File(context.filesDir, fileName)
-
-        if (certFile.exists()) {
-            val certBytes = certFile.readBytes()
-
-            val installIntent = KeyChain.createInstallIntent().apply {
-                putExtra(KeyChain.EXTRA_CERTIFICATE, certBytes)
-                putExtra(KeyChain.EXTRA_NAME, callSign) // optional alias name
-            }
-
-            context.startActivity(installIntent)
-        } else {
-            throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
-        }
-    }
-
-
-    private fun test14() {
+    // Combine self signed cert and callsing.pem together and install it.
+    // After that, it should be possible to call mtls REST APIs
+    private fun test23() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Get the full response
-                //val callSign = "Seiskapakki"
-                val callSign = "Kasipakki2"
-                val response = EndUserPfxRepository().getUserPfx(callSign)
-                val formatter = java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS")
-                val timestamp = formatter.format(java.util.Date())
-                val outFilename = "${callSign}_$timestamp.pfx"
 
-                val outFile = File(this@UiTestsActivity.filesDir, outFilename)
-                Timber.d(  "$outFile created")
+                val healthCheck =  HealthcheckRepository().requestHealthCheck()
+                val serverName = Utils().firstHostLabel(AppPrefs.restApiBaseUrl)
+                Timber.d("serverName: $serverName")
+
+               // val validUserPayload = InfoRepository().returnValiduserPayload()
+
+                val callsignPemResponse = EndUserPfxRepository().getUserPem(callSign)
+
+                val outFilename = "${callSign}.pem"
+                val certDir = Utils().getCertDirectory(this@UiTestsActivity)
+                val outFile = File(certDir, outFilename)
+                Timber.d("$outFile created")
+
+                if (callsignPemResponse.isSuccessful) {
+                    callsignPemResponse.body()?.let { body ->
+                        // Stream the response into the file
+                        outFile.outputStream().use { fileOut ->
+                            body.byteStream().use { input ->
+                                input.copyTo(fileOut)
+                            }
+                        }
+                    }
+                } else {
+                    throw IOException("Failed to create PEM: ${callsignPemResponse.code()} ${callsignPemResponse.message()}")
+                }
+
+                installCertificate(this@UiTestsActivity, outFilename, callSign,   File(certDir))
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+
+    // Combine self signed cert and one from pvarki server together and install it.
+    // After that, it should be possible to call mtls REST APIs
+    private fun test22() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                Timber.d("test22 " + AppPrefs.jwt)
+                val healthCheck =  HealthcheckRepository().requestHealthCheck()
+                val serverName = Utils().firstHostLabel(AppPrefs.restApiBaseUrl)
+                Timber.d("serverName: $serverName")
+
+                val validUserPayload = InfoRepository().returnValiduserPayload()
+
+                val pfxResponse = EndUserPfxRepository().signedChainPFXFile(callSign, serverName)
+
+                val response = EndUserPfxRepository().signedChainPEMFile(callSign, serverName)
+
+                val outFilename = "${callSign}_${serverName}.pem"
+                val certDir = Utils().getCertDirectory(this@UiTestsActivity)
+                val outFile = File(certDir, outFilename)
+                Timber.d("$outFile created")
 
                 if (response.isSuccessful) {
                     response.body()?.let { body ->
@@ -130,7 +148,211 @@ class UiTestsActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    throw IOException("Failed to download PEM: ${response.code()} ${response.message()}")
+                    throw IOException("Failed to create PEM: ${response.code()} ${response.message()}")
+                }
+
+               // installCertificate(this@UiTestsActivity, outFilename, callSign)
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun test21() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val utils = Utils()
+                val certDir = utils.getCertDirectory(this@UiTestsActivity)
+
+
+// 1. Load the REAL private key from the local placeholder PFX
+                val (privateKey, _) = utils.loadKeyFromPfx(
+                    "$certDir/cert_$callSign.pfx",
+                    callSign  // this PFX's password, per your test18 pattern
+                )
+
+// 2. Load the server-signed leaf + intermediate CA from the downloaded chain
+//    (Ykkospakki.pem has both certs concatenated - leaf first, then intermediate)
+                val certFactory = CertificateFactory.getInstance("X.509")
+                val certs = FileInputStream("$certDir/$callSign.pem").use { stream ->
+                    certFactory.generateCertificates(stream)
+                }.map { it as X509Certificate }
+
+                val leafCert = certs[0]        // CN=Ykkospakki, real signed
+                val intermediateCert = certs[1] // working-ewe-node1 Intermediate CA
+
+// 3. Build the final PFX with the REAL private key + REAL signed chain
+                val fileName = "final_${callSign}.pfx"
+                val pfxFilePath = "$certDir/$fileName"
+
+                utils.createLegacyPfx(
+                    pfxFilePath,
+                    callSign,  // or whatever password you want for the final file
+                    privateKey,
+                    arrayOf(leafCert, intermediateCert),
+                    callSign
+                )
+
+                showToast("File created to $pfxFilePath")
+                installCertificate(this@UiTestsActivity, fileName, callSign, File(certDir))
+            } catch (e: Exception) {
+                Timber.e(e, "Error in test21")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+
+    private fun test20() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val utils = Utils()
+                val certDir = utils.getCertDirectory(this@UiTestsActivity)
+
+                val serverName = Utils().firstHostLabel(AppPrefs.restApiBaseUrl)
+                Timber.d("serverName: $serverName")
+
+              //  val outFilename = "${callSign}_${serverName}.pem"
+                val outFilename = "final_${callSign}.pfx"
+
+                val pfxFile = File(certDir, outFilename)
+                val pfxPassword = callSign // Password for the PFX file
+                
+                val result = pfxFile.inputStream().use { inputStream ->
+                    HealthcheckRepository().requestHealthCheckMtls(
+                        inputStream,
+                        pfxPassword,
+                        this@UiTestsActivity
+                    )
+                }
+                showToast("Result: ${result}")
+
+                val haveIBeenAccepted = pfxFile.inputStream().use { inputStream ->
+                    EnrollmentRepository().requestHaveIBeenAccepted(
+                        inputStream,
+                        pfxPassword,
+                        this@UiTestsActivity
+                    )
+                }
+                showToast("Result: ${haveIBeenAccepted}")
+
+            } catch (e: Exception) {
+                Timber.e(e, "Error in test20")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+
+    private fun test19() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+            } catch (e: Exception) {
+                Timber.e(e, "Error in test19")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun test18() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+            } catch (e: Exception) {
+                Timber.e(e, "Error in test18")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun test17() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+            } catch (e: Exception) {
+                Timber.e(e, "Error in test17")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+
+    private fun test16() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val utils = Utils()
+                // Step 1: Generate KeyPair for the user
+                val keyPair = utils.generateKeyPair()
+
+                // Step 2: Generate a dummy CA and a user certificate signed by it (for demonstration)
+                // In reality, you'd get these from your CA server.
+                val userCert = utils.generateSelfSignedCertificate(keyPair, callSign)
+                // We'll just use the same cert twice or another self-signed one to simulate a chain
+                val caCert =
+                    utils.generateSelfSignedCertificate(utils.generateKeyPair(), "wanted-lamb")
+
+                // Step 3: Create the PFX with the requested legacy encryption parameters
+                val fileName = "legacy_${callSign}_${UUID.randomUUID()}.pfx"
+                val pfxFilePath = utils.getCertDirectory(this@UiTestsActivity) + "/" + fileName
+                val pfxPassword = callSign
+
+                utils.createLegacyPfx(
+                    pfxFilePath,
+                    pfxPassword,
+                    keyPair.private,
+                    arrayOf(userCert, caCert),
+                    "IEUser"
+                )
+
+                withContext(Dispatchers.Main) {
+                    showToast("Legacy PFX created: $fileName")
+                    val file = File(pfxFilePath)
+                    shareFile(this@UiTestsActivity, file, "com.pvarki.deployapp.fileprovider")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error in test16")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun test15() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = UtilsRepository().getJwtPubkey()
+                showToast("JWT pubkey: ${response}")
+            } catch (e: Exception) {
+                Timber.e(e, "Error")
+                showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun test14() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+
+                val response = EndUserPfxRepository().getUserPfx(callSign)
+                val formatter = java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS")
+                val timestamp = formatter.format(java.util.Date())
+                val outFilename = "${callSign}_$timestamp.pfx"
+
+                val outFile = File(this@UiTestsActivity.filesDir, outFilename)
+                Timber.d("$outFile created")
+
+                if (response.isSuccessful) {
+                    response.body()?.let { body ->
+                        // Stream the response into the file
+                        outFile.outputStream().use { fileOut ->
+                            body.byteStream().use { input ->
+                                input.copyTo(fileOut)
+                            }
+                        }
+                    }
+                } else {
+                    throw IOException("Failed to create PEM: ${response.code()} ${response.message()}")
                 }
 
                 val uri = FileProvider.getUriForFile(
@@ -154,16 +376,13 @@ class UiTestsActivity : AppCompatActivity() {
     private fun test13() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Get the full response
-                //val callSign = "Seiskapakki"
-                val callSign = "Kasipakki"
                 val response = EndUserPfxRepository().getUserPfx(callSign)
                 val formatter = java.text.SimpleDateFormat("yyyyMMdd_HHmmss_SSS")
                 val timestamp = formatter.format(java.util.Date())
                 val outFilename = "${callSign}_$timestamp.pfx"
 
                 val outFile = File(this@UiTestsActivity.filesDir, outFilename)
-                Timber.d(  "$outFile created")
+                Timber.d("$outFile created")
 
                 if (response.isSuccessful) {
                     response.body()?.let { body ->
@@ -175,10 +394,10 @@ class UiTestsActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    throw IOException("Failed to download PEM: ${response.code()} ${response.message()}")
+                    throw IOException("Failed to create PEM: ${response.code()} ${response.message()}")
                 }
 
-                installPfxCertificate(this@UiTestsActivity, outFilename, callSign)
+                installCertificate(this@UiTestsActivity, outFilename, callSign, this@UiTestsActivity.filesDir)
             } catch (e: Exception) {
                 Timber.e(e, "Error")
                 showToast("Error: ${e.message}")
@@ -190,9 +409,6 @@ class UiTestsActivity : AppCompatActivity() {
     private fun test12() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Get the full response
-                //val callSign = "Seiskapakki"
-                val callSign = "Kasipakki"
                 val response = EndUserPfxRepository().getUserPem(callSign)
 
                 val outFile = File(this@UiTestsActivity.filesDir, "${callSign}.pem")
@@ -206,7 +422,7 @@ class UiTestsActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    throw IOException("Failed to download PEM: ${response.code()} ${response.message()}")
+                    throw IOException("Failed to create PEM: ${response.code()} ${response.message()}")
                 }
 
                 installPemCertificate(this@UiTestsActivity, "${callSign}.pem", callSign)
@@ -220,9 +436,6 @@ class UiTestsActivity : AppCompatActivity() {
     private fun test11() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // 1. Get the full response
-                //val callSign = "Seiskapakki"
-                val callSign = "AndroidTimo"
                 val response = EndUserPfxRepository().getUserPfx(callSign)
 
                 val outFile = File(this@UiTestsActivity.filesDir, "user_${callSign}.pfx")
@@ -236,45 +449,9 @@ class UiTestsActivity : AppCompatActivity() {
                         }
                     }
                 } else {
-                    throw IOException("Failed to download PFX: ${response.code()} ${response.message()}")
+                    throw IOException("Failed to create PFX: ${response.code()} ${response.message()}")
                 }
 
-
-                /*
-                                if (response.isSuccessful && response.body() != null) {
-                                    // 2. Extract filename from Content-Disposition header
-                                    val contentDisposition = response.headers()["Content-Disposition"]
-                                    val fileName = contentDisposition
-                                        ?.substringAfter("filename=")
-                                        ?.replace("\"", "")
-                                        ?: "certificate.pfx"
-
-                                    // 3. Save file to disk
-                                    val fileDir = Utils().getCertDirectory(this@UiTestsActivity)
-                                    val file = File(fileDir, fileName)
-                                    response.body()!!.byteStream().use { input ->
-                                        file.outputStream().use { output ->
-                                            input.copyTo(output)
-                                        }
-                                    }
-
-                                    showToast("Result saved to: ${file.absolutePath}")
-
-                                    // 4. Prompt user to install
-                                    val uri = FileProvider.getUriForFile(
-                                        this@UiTestsActivity,
-                                        "com.pvarki.deployapp.fileprovider",
-                                        file
-                                    )
-                                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                                        setDataAndType(uri, "application/x-pkcs12")
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    startActivity(Intent.createChooser(intent, "Install certificate"))
-                                } else {
-                                    showToast("Failed to download certificate")
-                                }
-                                */
 
             } catch (e: Exception) {
                 Timber.e(e, "Error")
@@ -286,8 +463,7 @@ class UiTestsActivity : AppCompatActivity() {
     private fun test10() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val callSign = "Qqwweerr"
-                val fileName = "$callSign.pfx"
+                val fileName = "cert_$callSign.pfx"
                 val pfxFilePath = Utils().getCertDirectory(this@UiTestsActivity) + "/" + fileName
                 val inputStream: InputStream = File(pfxFilePath).inputStream()
                 val pfxPassword = callSign // Password for the PFX file
@@ -547,4 +723,56 @@ class UiTestsActivity : AppCompatActivity() {
             .setPositiveButton("Close", null)
             .show()
     }
+
+
+    fun showImageDialog(context: Context, imageBitmap: Bitmap) {
+        val imageView = ImageView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(600, 600)
+            setImageBitmap(imageBitmap)
+        }
+
+        AlertDialog.Builder(context)
+            .setTitle("Here's your QR code")
+            .setView(imageView)
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
+
+    fun installCertificate(context: Context, fileName: String, callSign: String,directory:File) {
+        val certFile = File(directory, fileName)
+
+        if (certFile.exists()) {
+            val certBytes = certFile.readBytes()
+
+            val installIntent = KeyChain.createInstallIntent().apply {
+                putExtra(KeyChain.EXTRA_PKCS12, certBytes)
+                putExtra(KeyChain.EXTRA_NAME, callSign) // optional alias name
+            }
+
+            context.startActivity(installIntent)
+        } else {
+            throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
+        }
+    }
+
+
+    fun installPemCertificate(context: Context, fileName: String, callSign: String) {
+        val certFile = File(context.filesDir, fileName)
+
+        if (certFile.exists()) {
+            val certBytes = certFile.readBytes()
+
+            val installIntent = KeyChain.createInstallIntent().apply {
+                putExtra(KeyChain.EXTRA_CERTIFICATE, certBytes)
+                putExtra(KeyChain.EXTRA_NAME, callSign) // optional alias name
+            }
+
+            context.startActivity(installIntent)
+        } else {
+            throw IllegalArgumentException("Certificate file not found: ${certFile.absolutePath}")
+        }
+    }
+
+
 }

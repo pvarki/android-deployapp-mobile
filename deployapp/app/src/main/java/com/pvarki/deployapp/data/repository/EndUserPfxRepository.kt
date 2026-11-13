@@ -7,7 +7,7 @@ import retrofit2.Response
 
 class EndUserPfxRepository {
 
-    private val api = ApiClient.getRetrofit().create(ApiService::class.java)
+    private val api: ApiService = ApiClient.getRetrofit().create(ApiService::class.java)
 
     suspend fun getUserPfx(callSign: String): Response<ResponseBody> {
         val response = api.getUserPfx(callSign)
@@ -16,6 +16,16 @@ class EndUserPfxRepository {
 
     suspend fun getUserPem(callSign: String): Response<ResponseBody> {
         val response = api.getUserPem(callSign)
+        return response
+    }
+
+    suspend fun signedChainPEMFile(callSign: String, serverName: String): Response<ResponseBody> {
+        val response = api.signedChainPEMFile(callSign, serverName)
+        return response
+    }
+
+    suspend fun signedChainPFXFile(callSign: String, serverName: String): Response<ResponseBody> {
+        val response = api.signedChainPFXFile(callSign, serverName)
         return response
     }
 }

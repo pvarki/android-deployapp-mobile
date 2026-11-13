@@ -34,8 +34,82 @@ import com.google.zxing.MultiFormatWriter
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.EncodeHintType
 import android.util.Base64
+import org.bouncycastle.asn1.DERBMPString
+import org.bouncycastle.asn1.DEROctetString
+import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils
+import org.bouncycastle.pkcs.PKCS12PfxPduBuilder
+import org.bouncycastle.pkcs.PKCS12SafeBag
+import org.bouncycastle.pkcs.jcajce.JcaPKCS12SafeBagBuilder
+import org.bouncycastle.pkcs.jcajce.JcePKCS12MacCalculatorBuilder
+import org.bouncycastle.pkcs.jcajce.JcePKCSPBEOutputEncryptorBuilder
+import java.net.URI
+import java.security.cert.CertificateFactory
 
 class Utils {
+
+
+    fun firstHostLabel(url: String): String {
+        val host = URI(url).host ?: throw IllegalArgumentException("Invalid URL: $url")
+        return host.substringBefore('.')
+    }
+
+    /**
+     * Loads a PFX/PKCS12 file and extracts the user certificate.
+     *
+     * @param folderPath The directory containing the PFX file.
+     * @param fileName The name of the PFX file (e.g., "user.pfx").
+     * @param password The password required to unlock the PFX archive.
+     * @return The parsed X509Certificate object.
+     */
+    fun loadPfxCertificate(folderPath: String, fileName: String, password: CharArray): X509Certificate {
+        val pfxFile = File(folderPath, fileName)
+
+        if (!pfxFile.exists()) {
+            throw IllegalArgumentException("PFX file not found at: ${pfxFile.absolutePath}")
+        }
+
+        return FileInputStream(pfxFile).use { inputStream ->
+            val keyStore = KeyStore.getInstance("PKCS12")
+            keyStore.load(inputStream, password)
+
+            val aliases = keyStore.aliases()
+            while (aliases.hasMoreElements()) {
+                val alias = aliases.nextElement()
+                if (keyStore.isKeyEntry(alias)) {
+                    val certificate = keyStore.getCertificate(alias) as? X509Certificate
+                    if (certificate != null) return@use certificate
+                }
+            }
+            throw IllegalStateException("No user certificate found in PFX file.")
+        }
+    }
+
+    /**
+     * Reads a CA certificate from a specific folder and returns it as an X509Certificate.
+     *
+     * @param folderPath The directory where the certificate is stored.
+     * @param fileName The name of the certificate file (e.g., "isrg-root-x1-cross-signed.pem").
+     * @return The parsed X509Certificate object.
+     */
+    fun loadCACertificate(folderPath: String, fileName: String): X509Certificate {
+        val certFile = File(folderPath, fileName)
+
+        // 1. Ensure the file actually exists
+        if (!certFile.exists()) {
+            throw IllegalArgumentException("Certificate file not found at: ${certFile.absolutePath}")
+        }
+
+        // 2. Open a file input stream
+        return FileInputStream(certFile).use { inputStream ->
+            // 3. Initialize the CertificateFactory for X.509
+            val certificateFactory = CertificateFactory.getInstance("X.509")
+
+            // 4. Generate and cast the certificate
+            certificateFactory.generateCertificate(inputStream) as X509Certificate
+        }
+    }
 
 
     fun saveBase64File(base64Data: String, filename: String, directory: File): File? {
@@ -129,23 +203,20 @@ class Utils {
 
     fun getPublicKeyFromPfx(pfxPath: String, password: String): PublicKey {
         try {
-            // Add Bouncy Castle provider if not already added
-            if (Security.getProvider("BC") == null) {
-                Security.addProvider(BouncyCastleProvider())
-            }
-
-            val keyStore = KeyStore.getInstance("PKCS12", "BC")
+            val keyStore = KeyStore.getInstance("PKCS12")
             FileInputStream(pfxPath).use { fis ->
                 keyStore.load(fis, password.toCharArray())
             }
 
-            val alias = keyStore.aliases().toList().firstOrNull()
-                ?: throw Exception("No aliases found in keystore")
-
-            val certificate = keyStore.getCertificate(alias)
-                ?: throw Exception("Certificate not found for alias: $alias")
-
-            return certificate.publicKey
+            val aliases = keyStore.aliases()
+            while (aliases.hasMoreElements()) {
+                val alias = aliases.nextElement()
+                if (keyStore.isKeyEntry(alias)) {
+                    val certificate = keyStore.getCertificate(alias)
+                    if (certificate != null) return certificate.publicKey
+                }
+            }
+            throw Exception("No certificate with public key found in PFX file.")
         } catch (e: Exception) {
             e.printStackTrace()
             throw e
@@ -153,14 +224,71 @@ class Utils {
     }
 
     fun loadKeyFromPfx(pfxPath: String, password: String): Pair<PrivateKey, X509Certificate> {
-        val keyStore = KeyStore.getInstance("PKCS12", "BC")
-        keyStore.load(FileInputStream(pfxPath), password.toCharArray())
+        val keyStore = KeyStore.getInstance("PKCS12")
+        FileInputStream(pfxPath).use { fis ->
+            keyStore.load(fis, password.toCharArray())
+        }
 
-        val alias = keyStore.aliases().toList().first()
-        val key = keyStore.getKey(alias, password.toCharArray()) as PrivateKey
-        val cert = keyStore.getCertificate(alias) as X509Certificate
+        val aliases = keyStore.aliases()
+        while (aliases.hasMoreElements()) {
+            val alias = aliases.nextElement()
+            if (keyStore.isKeyEntry(alias)) {
+                val key = keyStore.getKey(alias, password.toCharArray()) as? PrivateKey
+                val cert = keyStore.getCertificate(alias) as? X509Certificate
+                if (key != null && cert != null) {
+                    return Pair(key, cert)
+                }
+            }
+        }
+        throw Exception("No private key and certificate pair found in PFX file.")
+    }
 
-        return Pair(key, cert)
+    @Throws(Exception::class)
+    fun createLegacyPfx(
+        pfxFilePath: String,
+        password: String,
+        privateKey: PrivateKey,
+        certificateChain: Array<X509Certificate>,
+        friendlyName: String
+    ) {
+        val bcProvider = BouncyCastleProvider()
+        val passwordChars = password.toCharArray()
+        val pfxPduBuilder = PKCS12PfxPduBuilder()
+
+        // 1. Shrouded Keybag for Private Key: pbeWithSHA1And3-KeyTripleDES-CBC, Iteration 50000
+        val keyEncryptor = JcePKCSPBEOutputEncryptorBuilder(PKCSObjectIdentifiers.pbeWithSHAAnd3_KeyTripleDES_CBC)
+            .setProvider(bcProvider)
+            .setIterationCount(50000)
+            .build(passwordChars)
+
+        val leafCert = certificateChain[0]
+        val skid = JcaX509ExtensionUtils().createSubjectKeyIdentifier(leafCert.publicKey)
+
+        val keyBagBuilder = JcaPKCS12SafeBagBuilder(privateKey, keyEncryptor)
+        keyBagBuilder.addBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName, DERBMPString(friendlyName))
+        keyBagBuilder.addBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_localKeyId, DEROctetString(skid.keyIdentifier))
+        pfxPduBuilder.addData(keyBagBuilder.build())
+
+        // 2. Certificate Bags as unencrypted data
+        certificateChain.forEachIndexed { index, cert ->
+            val bagBuilder = JcaPKCS12SafeBagBuilder(cert)
+            val currentFriendlyName = if (index == 0) friendlyName else "$friendlyName-ca-$index"
+            bagBuilder.addBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName, DERBMPString(currentFriendlyName))
+
+            if (index == 0) { // Leaf certificate attributes
+                bagBuilder.addBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_localKeyId, DEROctetString(skid.keyIdentifier))
+            }
+            pfxPduBuilder.addData(bagBuilder.build())
+        }
+
+        // 3. MAC: sha1, Iteration 2048
+        val macCalculatorBuilder = JcePKCS12MacCalculatorBuilder(OIWObjectIdentifiers.idSHA1)
+            .setProvider(bcProvider)
+            .setIterationCount(2048)
+
+        val pfxPdu = pfxPduBuilder.build(macCalculatorBuilder, passwordChars)
+
+        FileOutputStream(pfxFilePath).use { it.write(pfxPdu.encoded) }
     }
 
 

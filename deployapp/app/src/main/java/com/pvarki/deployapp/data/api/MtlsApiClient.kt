@@ -36,11 +36,23 @@ object MtlsApiClient {
         certPassword: String,
         context: Context
     ): Retrofit {
-        if (retrofitInstance == null || AppPrefs.restApiBaseUrl != retrofitInstance?.baseUrl()
-                .toString()
-        ) {
+        var baseUrl = if (AppPrefs.restApiBaseUrl.startsWith("https://")) {
+            if (!AppPrefs.restApiBaseUrl.contains("https://mtls.")) {
+                AppPrefs.restApiBaseUrl.replace("https://", "https://mtls.")
+            } else {
+                AppPrefs.restApiBaseUrl
+            }
+        } else {
+            "https://mtls.cool-scorpion.solution.dev.pvarki.fi"
+        }
+        
+        if (!baseUrl.endsWith("/")) {
+            baseUrl += "/"
+        }
+
+        if (retrofitInstance == null || baseUrl != retrofitInstance?.baseUrl().toString()) {
             retrofitInstance = Retrofit.Builder()
-                .baseUrl("https://mtls.tidy-stag.solution.dev.pvarki.fi")
+                .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(createMutualTlsHttpClient(certInputStream, certPassword, context))
                 .build()
